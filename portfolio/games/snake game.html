@@ -1,0 +1,206 @@
+<html >
+<head>
+    <title>Classic Snake Game</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(135deg, #0f2027, #203a43);
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            margin: 0;
+            height: 100vh;
+            justify-content: center;
+        }
+        h1 {
+            font-size: 4em;
+            margin: 20px;
+            color: #e0f7fa;
+            text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+            animation: textGlow 1.5s ease-in-out infinite alternate;
+        }
+        @keyframes textGlow {
+            from {
+                text-shadow: 4px 4px 8px rgba(0, 255, 255, 0.5);
+            }
+            to {
+                text-shadow: 4px 4px 15px rgba(0, 255, 255, 1);
+            }
+        }
+        canvas {
+            border: 6px solid #00bcd4;
+            background-color: #1c1c1c;
+            box-shadow: 0 0 25px rgba(0, 188, 212, 0.7);
+            border-radius: 10px;
+            transition: transform 0.3s;
+        }
+        canvas:hover {
+            transform: scale(1.05);
+        }
+        #scoreboard {
+            margin: 20px;
+            font-size: 30px;
+            color: #00bcd4;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            font-weight: bold;
+        }
+        #controls {
+            margin: 20px;
+            display: flex;
+            gap: 20px;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            background: linear-gradient(145deg, #00bcd4, #008c95);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+            font-family: 'Poppins', sans-serif;
+            font-weight: bold;
+        }
+        button:hover {
+            background: linear-gradient(145deg, #008c95, #00bcd4);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+        }
+        button:active {
+            transform: translateY(1px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        #gameOverMessage, #gameResetMessage {
+            display: none;
+            font-size: 48px;
+            color: #ffeb3b;
+            text-shadow: 4px 4px 10px rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 15px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            box-shadow: 0 0 30px rgba(255, 235, 59, 0.9);
+            animation: fadeIn 1s ease-out, slideIn 1s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translate(-50%, -60%); }
+            to { transform: translate(-50%, -50%); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Classic Snake Game</h1>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="scoreboard">Score: 0 | High Score: 0</div>
+    <div id="controls">
+        <button id="startBtn">Start Game</button>
+        <button id="resetBtn">Reset Game</button>
+    </div>
+    <div id="gameOverMessage">Game Over<br>Score: 0</div>
+    <div id="gameResetMessage">Game Reset</div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const box = 20;
+        let snake = [{ x: 9 * box, y: 9 * box }];
+        let direction = '';
+        let food = {
+            x: Math.floor(Math.random() * 20) * box,
+            y: Math.floor(Math.random() * 20) * box
+        };
+        let score = 0;
+        let highScore = localStorage.getItem('highScore') || 0;
+        let gameOver = false;
+        document.addEventListener('keydown', directionControl);
+        function directionControl(event) {
+            if (event.keyCode === 37 && direction !== 'RIGHT') direction = 'LEFT';
+            else if (event.keyCode === 38 && direction !== 'DOWN') direction = 'UP';
+            else if (event.keyCode === 39 && direction !== 'LEFT') direction = 'RIGHT';
+            else if (event.keyCode === 40 && direction !== 'UP') direction = 'DOWN';
+        }
+        function draw() {
+            if (gameOver) return;
+            ctx.fillStyle = '#1c1c1c';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            snake.forEach((part, index) => {
+                ctx.fillStyle = index === 0 ? 'lime' : 'white';
+                ctx.fillRect(part.x, part.y, box, box);
+            });
+            ctx.fillStyle = 'red';
+            ctx.fillRect(food.x, food.y, box, box);
+            ctx.fillStyle = 'white';
+            ctx.font = '26px Poppins';
+            ctx.fillText(`Score: ${score} | High Score: ${highScore}`, box, box);
+            let snakeX = snake[0].x;
+            let snakeY = snake[0].y;
+            if (direction === 'LEFT') snakeX -= box;
+            if (direction === 'UP') snakeY -= box;
+            if (direction === 'RIGHT') snakeX += box;
+            if (direction === 'DOWN') snakeY += box;
+            if (snakeX === food.x && snakeY === food.y) {
+                score++;
+                food = {
+                    x: Math.floor(Math.random() * 20) * box,
+                    y: Math.floor(Math.random() * 20) * box
+                };
+            } else {
+                snake.pop();
+            }
+            const newHead = { x: snakeX, y: snakeY };
+            if (snakeX < 0 || snakeY < 0 || snakeX >= canvas.width || snakeY >= canvas.height || collision(newHead, snake)) {
+                gameOver = true;
+                document.getElementById('gameOverMessage').innerHTML = `Game Over<br>Score: ${score}`;
+                document.getElementById('gameOverMessage').style.display = 'block';
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('highScore', highScore);
+                }
+                clearInterval(game);
+            }
+            snake.unshift(newHead);
+        }
+        function collision(head, array) {
+            return array.some(part => part.x === head.x && part.y === head.y);
+        }
+        let game;
+        document.getElementById('startBtn').onclick = function() {
+            if (gameOver) return;
+            score = 0;
+            snake = [{ x: 9 * box, y: 9 * box }];
+            direction = '';
+            gameOver = false;
+            document.getElementById('gameOverMessage').style.display = 'none';
+            document.getElementById('gameResetMessage').style.display = 'none';
+            game = setInterval(draw, 100);
+        };
+        document.getElementById('resetBtn').onclick = function() {
+            clearInterval(game);
+            score = 0;
+            snake = [{ x: 9 * box, y: 9 * box }];
+            direction = '';
+            gameOver = false;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            document.getElementById('gameOverMessage').style.display = 'none';
+            document.getElementById('gameResetMessage').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('gameResetMessage').style.display = 'none';
+            }, 1000);
+        };
+    </script>
+</body>
+</html>
